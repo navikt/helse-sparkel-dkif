@@ -1,7 +1,7 @@
 apiVersion: nais.io/v1alpha1
 kind: Application
 metadata:
-  name: sparkel-institusjonsopphold
+  name: sparkel-dkif
   namespace: tbd
   labels:
     team: tbd
@@ -35,15 +35,15 @@ spec:
     enabled: true
     paths:
       - mountPath: /var/run/secrets/nais.io/service_user
-        kvPath: /serviceuser/data/prod/srvsparkelinst
+        kvPath: /serviceuser/data/prod/srvsparkeldkif
   env:
   - name: KAFKA_BOOTSTRAP_SERVERS
     value: a01apvl00145.adeo.no:8443,a01apvl00146.adeo.no:8443,a01apvl00147.adeo.no:8443,a01apvl00148.adeo.no:8443,a01apvl00149.adeo.no:8443,a01apvl00150.adeo.no:8443
   - name: KAFKA_CONSUMER_GROUP_ID
-    value: sparkel-institusjonsopphold-v1
+    value: sparkel-dkif-v1
   - name: KAFKA_RAPID_TOPIC
     value: helse-rapid-v1
   - name: STS_BASE_URL
     value: http://security-token-service.default.svc.nais.local
-  - name: INSTITUSJONSOPPHOLD_URL
-    value: http://inst2.default.svc.nais.local
+  - name: DKIF_URL
+    value: http://dkif.default.svc.nais.local

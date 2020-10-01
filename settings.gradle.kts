@@ -1,1 +1,1 @@
-rootProject.name = "sparkel-institusjonsopphold"
+rootProject.name = "sparkel-dkif"

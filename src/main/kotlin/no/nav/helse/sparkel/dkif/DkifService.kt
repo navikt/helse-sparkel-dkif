@@ -1,11 +1,11 @@
-package no.nav.helse.sparkel.institusjonsopphold
+package no.nav.helse.sparkel.dkif
 
 import com.fasterxml.jackson.databind.JsonNode
 import net.logstash.logback.argument.StructuredArguments.keyValue
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 
-internal class InstitusjonsoppholdService(private val institusjonsoppholdClient: InstitusjonsoppholdClient) {
+internal class DkifService(private val dkifClient: DkifClient) {
 
     private val sikkerlogg = LoggerFactory.getLogger("tjenestekall")
     private val log = LoggerFactory.getLogger(this::class.java)
@@ -16,7 +16,7 @@ internal class InstitusjonsoppholdService(private val institusjonsoppholdClient:
         fødselsnummer: String
     ): JsonNode? = withMDC("id" to behovId, "vedtaksperiodeId" to vedtaksperiodeId) {
         try {
-            val institusjonsopphold = institusjonsoppholdClient.hentInstitusjonsopphold(
+            val kontaktinformasjon = dkifClient.hentKontaktinformasjon(
                 fødselsnummer = fødselsnummer,
                 behovId = behovId
             )
@@ -30,15 +30,15 @@ internal class InstitusjonsoppholdService(private val institusjonsoppholdClient:
                 keyValue("id", behovId),
                 keyValue("vedtaksperiodeId", vedtaksperiodeId)
             )
-            institusjonsopphold
+            kontaktinformasjon
         } catch (err: Exception) {
             log.warn(
-                "feil ved henting av institusjonsopphold-data: ${err.message} for {}",
+                "feil ved henting av dkif-data: ${err.message} for {}",
                 keyValue("vedtaksperiodeId", vedtaksperiodeId),
                 err
             )
             sikkerlogg.warn(
-                "feil ved henting av institusjonsopphold-data: ${err.message} for {}",
+                "feil ved henting av dkif-data: ${err.message} for {}",
                 keyValue("vedtaksperiodeId", vedtaksperiodeId),
                 err
             )

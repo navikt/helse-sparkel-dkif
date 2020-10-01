@@ -1,4 +1,4 @@
-package no.nav.helse.sparkel.institusjonsopphold
+package no.nav.helse.sparkel.dkif
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -13,8 +13,9 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.TestInstance.Lifecycle
 
+@Disabled
 @TestInstance(Lifecycle.PER_CLASS)
-internal class InstitusjonsoppholdløserTest {
+internal class DkifløserTest {
 
     private val wireMockServer: WireMockServer = WireMockServer(WireMockConfiguration.options().dynamicPort())
     private val objectMapper = jacksonObjectMapper()
@@ -22,7 +23,7 @@ internal class InstitusjonsoppholdløserTest {
         .registerModule(JavaTimeModule())
 
     private lateinit var sendtMelding: JsonNode
-    private lateinit var service: InstitusjonsoppholdService
+    private lateinit var service: DkifService
 
     private val context = object : RapidsConnection.MessageContext {
         override fun send(message: String) {
@@ -52,8 +53,8 @@ internal class InstitusjonsoppholdløserTest {
         wireMockServer.start()
         configureFor(create().port(wireMockServer.port()).build())
         stubEksterneEndepunkt()
-        service = InstitusjonsoppholdService(
-            InstitusjonsoppholdClient(
+        service = DkifService(
+            DkifClient(
                 baseUrl = wireMockServer.baseUrl(),
                 stsClient = StsRestClient(
                     baseUrl = wireMockServer.baseUrl(),
@@ -91,12 +92,12 @@ internal class InstitusjonsoppholdløserTest {
         assertTrue(perioder.isEmpty())
     }
 
-    private fun JsonNode.løsning() = this.path("@løsning").path(Institusjonsoppholdløser.behov).map {
+    private fun JsonNode.løsning() = this.path("@løsning").path(Dkifløser.behov).map {
         Institusjonsoppholdperiode(it)
     }
 
     private fun testBehov(behov: String) {
-        Institusjonsoppholdløser(rapid, service)
+        Dkifløser(rapid, service)
         rapid.sendTestMessage(behov)
     }
 

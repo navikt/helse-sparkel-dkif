@@ -1,4 +1,4 @@
-package no.nav.helse.sparkel.institusjonsopphold
+package no.nav.helse.sparkel.dkif
 
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
@@ -14,14 +14,14 @@ internal fun createApp(env: Map<String, String>): RapidsConnection {
         baseUrl = env.getValue("STS_BASE_URL"),
         serviceUser = "/var/run/secrets/nais.io/service_user".let { ServiceUser("$it/username".readFile(), "$it/password".readFile()) }
     )
-    val institusjonsoppholdClient = InstitusjonsoppholdClient(
-        baseUrl = env.getValue("INSTITUSJONSOPPHOLD_URL"),
+    val dkifClient = DkifClient(
+        baseUrl = env.getValue("DKIF_URL"),
         stsClient = stsClient
     )
-    val institusjonsoppholdService = InstitusjonsoppholdService(institusjonsoppholdClient)
+    val dkifService = DkifService(dkifClient)
 
     return RapidApplication.create(env).apply {
-        Institusjonsoppholdløser(this, institusjonsoppholdService)
+//        Institusjonsoppholdløser(this, institusjonsoppholdService)
     }
 }
 
