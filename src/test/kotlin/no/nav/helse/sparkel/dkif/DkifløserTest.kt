@@ -129,7 +129,6 @@ internal class DkifløserTest {
             "@id" : "id",
             "@opprettet" : "2020-05-18",
             "spleisBehovId" : "spleisBehovId",
-            "vedtaksperiodeId" : "vedtaksperiodeId",
             "fødselsnummer" : "fnr"
         }
         """
@@ -142,7 +141,6 @@ internal class DkifløserTest {
             "@id" : "id",
             "@opprettet" : "2020-05-18",
             "spleisBehovId" : "spleisBehovId",
-            "vedtaksperiodeId" : "vedtaksperiodeId",
             "fødselsnummer" : "ikkeTilgang"
         }
         """
@@ -155,7 +153,6 @@ internal class DkifløserTest {
             "@id" : "id",
             "@opprettet" : "2020-05-18",
             "spleisBehovId" : "spleisBehovId",
-            "vedtaksperiodeId" : "vedtaksperiodeId",
             "fødselsnummer" : "feil"
         }
         """
@@ -168,7 +165,6 @@ internal class DkifløserTest {
             "@id" : "id",
             "@opprettet" : "2020-05-18",
             "spleisBehovId" : "spleisBehovId",
-            "vedtaksperiodeId" : "vedtaksperiodeId",
             "fødselsnummer" : "reservert"
         }
         """
@@ -181,7 +177,6 @@ internal class DkifløserTest {
             "@id" : "id",
             "@opprettet" : "2020-05-18",
             "spleisBehovId" : "spleisBehovId",
-            "vedtaksperiodeId" : "vedtaksperiodeId",
             "fødselsnummer" : "kanIkkeVarsles"
         }
         """
@@ -194,7 +189,6 @@ internal class DkifløserTest {
             "@id" : "id",
             "@opprettet" : "2020-05-18",
             "spleisBehovId" : "spleisBehovId",
-            "vedtaksperiodeId" : "vedtaksperiodeId",
             "fødselsnummer" : "erReservertOgKanIkkeVarsles"
         }
         """

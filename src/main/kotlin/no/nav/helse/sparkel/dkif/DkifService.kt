@@ -12,9 +12,8 @@ internal class DkifService(private val dkifClient: DkifClient) {
 
     fun løsningForBehov(
         behovId: String,
-        vedtaksperiodeId: String,
         fødselsnummer: String
-    ): JsonNode? = withMDC("id" to behovId, "vedtaksperiodeId" to vedtaksperiodeId) {
+    ): JsonNode? = withMDC("id" to behovId) {
         try {
             val kontaktinformasjon = dkifClient.hentDigitalKontaktinformasjon(
                 fødselsnummer = fødselsnummer,
@@ -22,24 +21,20 @@ internal class DkifService(private val dkifClient: DkifClient) {
             ).path("kontaktinfo").path(fødselsnummer)
             log.info(
                 "løser behov: {} for {}",
-                keyValue("id", behovId),
-                keyValue("vedtaksperiodeId", vedtaksperiodeId)
+                keyValue("id", behovId)
             )
             sikkerlogg.info(
                 "løser behov: {} for {}",
-                keyValue("id", behovId),
-                keyValue("vedtaksperiodeId", vedtaksperiodeId)
+                keyValue("id", behovId)
             )
             kontaktinformasjon
         } catch (err: Exception) {
             log.warn(
                 "feil ved henting av dkif-data: ${err.message} for {}",
-                keyValue("vedtaksperiodeId", vedtaksperiodeId),
                 err
             )
             sikkerlogg.warn(
                 "feil ved henting av dkif-data: ${err.message} for {}",
-                keyValue("vedtaksperiodeId", vedtaksperiodeId),
                 err
             )
             null

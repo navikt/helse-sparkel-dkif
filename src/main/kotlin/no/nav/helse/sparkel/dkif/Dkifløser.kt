@@ -24,7 +24,6 @@ internal class Dkifløser(
             validate { it.rejectKey("@løsning") }
             validate { it.requireKey("@id") }
             validate { it.requireKey("fødselsnummer") }
-            validate { it.requireKey("vedtaksperiodeId") }
         }.register(this)
     }
 
@@ -36,7 +35,6 @@ internal class Dkifløser(
         sikkerlogg.info("mottok melding: ${packet.toJson()}")
         dkifService.løsningForBehov(
             packet["@id"].asText(),
-            packet["vedtaksperiodeId"].asText(),
             packet["fødselsnummer"].asText()
         ).let { løsning ->
             packet["@løsning"] = mapOf(
@@ -47,7 +45,6 @@ internal class Dkifløser(
                 sikkerlogg.info(
                     "sender svar {} for {}:\n\t{}",
                     keyValue("id", packet["@id"].asText()),
-                    keyValue("vedtaksperiodeId", packet["vedtaksperiodeId"].asText()),
                     json
                 )
             })
