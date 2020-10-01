@@ -9,11 +9,9 @@ import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
 import no.nav.helse.rapids_rivers.RapidsConnection
 import org.junit.jupiter.api.*
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.TestInstance.Lifecycle
 
-@Disabled
 @TestInstance(Lifecycle.PER_CLASS)
 internal class DkifløserTest {
 
@@ -75,44 +73,64 @@ internal class DkifløserTest {
     }
 
     @Test
-    fun `løser behov`() {
-        testBehov(enkeltBehov())
+    fun `løser behov for digital person`() {
+        testBehov(erDigital())
 
-        val perioder = sendtMelding.løsning()
-
-        assertEquals(2, perioder.size)
+        assertTrue(sendtMelding.løsning())
     }
 
     @Test
-    fun `returnerer tom liste hvis ikke tilgang til Infotrygd`() {
+    fun `Svarer false for person med feil`() {
+        testBehov(personMedFeil())
+
+        assertFalse(sendtMelding.løsning())
+    }
+
+    @Test
+    fun `Svarer false når dkif gir error`() {
         testBehov(ikkeTilgangBehov())
 
-        val perioder = sendtMelding.løsning()
-
-        assertTrue(perioder.isEmpty())
+        assertFalse(sendtMelding.løsning())
     }
 
-    private fun JsonNode.løsning() = this.path("@løsning").path(Dkifløser.behov).map {
-        Institusjonsoppholdperiode(it)
+    @Test
+    fun `Svarer false når person er reservert`() {
+        testBehov(erReservert())
+
+        assertFalse(sendtMelding.løsning())
     }
+
+    @Test
+    fun `Svarer false når person ikke kan varsles`() {
+        testBehov(kanIkkeVarsles())
+
+        assertFalse(sendtMelding.løsning())
+    }
+
+    @Test
+    fun `Svarer false når person er reservert og ikke kan varsles`() {
+        testBehov(erReservertOgKanIkkeVarsles())
+
+        assertFalse(sendtMelding.løsning())
+    }
+
+    private fun JsonNode.løsning() = this.path("@løsning").path(Dkifløser.behov).path("erDigital").asBoolean()
 
     private fun testBehov(behov: String) {
         Dkifløser(rapid, service)
         rapid.sendTestMessage(behov)
     }
 
-    private fun enkeltBehov() =
+    private fun erDigital() =
         """
         {
             "@event_name" : "behov",
-            "@behov" : [ "Institusjonsopphold" ],
+            "@behov" : [ "DigitalKontaktinformasjon" ],
             "@id" : "id",
             "@opprettet" : "2020-05-18",
             "spleisBehovId" : "spleisBehovId",
             "vedtaksperiodeId" : "vedtaksperiodeId",
-            "fødselsnummer" : "fnr",
-            "institusjonsoppholdFom": "2020-01-01",
-            "institusjonsoppholdTom": "2020-01-31"
+            "fødselsnummer" : "fnr"
         }
         """
 
@@ -120,14 +138,64 @@ internal class DkifløserTest {
         """
         {
             "@event_name" : "behov",
-            "@behov" : [ "Institusjonsopphold" ],
+            "@behov" : [ "DigitalKontaktinformasjon" ],
             "@id" : "id",
             "@opprettet" : "2020-05-18",
             "spleisBehovId" : "spleisBehovId",
             "vedtaksperiodeId" : "vedtaksperiodeId",
-            "fødselsnummer" : "ikkeTilgang",
-            "institusjonsoppholdFom": "2020-01-01",
-            "institusjonsoppholdTom": "2020-01-31"
+            "fødselsnummer" : "ikkeTilgang"
+        }
+        """
+
+    private fun personMedFeil() =
+        """
+        {
+            "@event_name" : "behov",
+            "@behov" : [ "DigitalKontaktinformasjon" ],
+            "@id" : "id",
+            "@opprettet" : "2020-05-18",
+            "spleisBehovId" : "spleisBehovId",
+            "vedtaksperiodeId" : "vedtaksperiodeId",
+            "fødselsnummer" : "feil"
+        }
+        """
+
+    private fun erReservert() =
+        """
+        {
+            "@event_name" : "behov",
+            "@behov" : [ "DigitalKontaktinformasjon" ],
+            "@id" : "id",
+            "@opprettet" : "2020-05-18",
+            "spleisBehovId" : "spleisBehovId",
+            "vedtaksperiodeId" : "vedtaksperiodeId",
+            "fødselsnummer" : "reservert"
+        }
+        """
+
+    private fun kanIkkeVarsles() =
+        """
+        {
+            "@event_name" : "behov",
+            "@behov" : [ "DigitalKontaktinformasjon" ],
+            "@id" : "id",
+            "@opprettet" : "2020-05-18",
+            "spleisBehovId" : "spleisBehovId",
+            "vedtaksperiodeId" : "vedtaksperiodeId",
+            "fødselsnummer" : "kanIkkeVarsles"
+        }
+        """
+
+    private fun erReservertOgKanIkkeVarsles() =
+        """
+        {
+            "@event_name" : "behov",
+            "@behov" : [ "DigitalKontaktinformasjon" ],
+            "@id" : "id",
+            "@opprettet" : "2020-05-18",
+            "spleisBehovId" : "spleisBehovId",
+            "vedtaksperiodeId" : "vedtaksperiodeId",
+            "fødselsnummer" : "erReservertOgKanIkkeVarsles"
         }
         """
 
@@ -148,84 +216,134 @@ internal class DkifløserTest {
                 )
         )
         stubFor(
-            get(urlPathEqualTo("/api/v1/person/institusjonsopphold"))
+            get(urlPathEqualTo("/api/v1/personer/kontaktinformasjon"))
                 .withHeader("Accept", equalTo("application/json"))
-                .withHeader("Nav-Personident", equalTo("fnr"))
+                .withHeader("Nav-Personidenter", equalTo("fnr"))
                 .withHeader("Nav-Call-Id", equalTo("id"))
                 .willReturn(
                     aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody(
-                            """[
-                                          {
-                                            "oppholdId": 0,
-                                            "tssEksternId": "string",
-                                            "organisasjonsnummer": "string",
-                                            "institusjonstype": "FO",
-                                            "varighet": "string",
-                                            "kategori": "S",
-                                            "startdato": "2020-01-01",
-                                            "faktiskSluttdato": "2020-01-31",
-                                            "forventetSluttdato": "2020-01-31",
-                                            "kilde": "string",
-                                            "overfoert": true,
-                                            "endretAv": "string",
-                                            "endringstidspunkt": "2020-09-30T10:47:17.319Z"
-                                          },
-                                          {
-                                            "oppholdId": 0,
-                                            "tssEksternId": "string",
-                                            "organisasjonsnummer": "string",
-                                            "institusjonstype": "FO",
-                                            "varighet": "string",
-                                            "kategori": "S",
-                                            "startdato": "2019-01-01",
-                                            "faktiskSluttdato": "2019-01-31",
-                                            "forventetSluttdato": "2019-01-31",
-                                            "kilde": "string",
-                                            "overfoert": true,
-                                            "endretAv": "string",
-                                            "endringstidspunkt": "2020-09-30T10:47:17.319Z"
-                                          },
-                                          {
-                                            "oppholdId": 0,
-                                            "tssEksternId": "string",
-                                            "organisasjonsnummer": "string",
-                                            "institusjonstype": "FO",
-                                            "varighet": "string",
-                                            "kategori": "S",
-                                            "startdato": "2019-01-01",
-                                            "faktiskSluttdato": null,
-                                            "forventetSluttdato": "2019-01-31",
-                                            "kilde": "string",
-                                            "overfoert": true,
-                                            "endretAv": "string",
-                                            "endringstidspunkt": "2020-09-30T10:47:17.319Z"
-                                          },
-                                          {
-                                            "oppholdId": 0,
-                                            "tssEksternId": "string",
-                                            "organisasjonsnummer": "string",
-                                            "institusjonstype": "FO",
-                                            "varighet": "string",
-                                            "kategori": "S",
-                                            "startdato": "2020-02-01",
-                                            "faktiskSluttdato": null,
-                                            "forventetSluttdato": "2020-03-31",
-                                            "kilde": "string",
-                                            "overfoert": true,
-                                            "endretAv": "string",
-                                            "endringstidspunkt": "2020-09-30T10:47:17.319Z"
-                                          }
-                                    ]"""
+                            """{
+                                      "feil": {},
+                                      "kontaktinfo": {
+                                        "fnr": {
+                                          "epostadresse": "string",
+                                          "kanVarsles": true,
+                                          "mobiltelefonnummer": "string",
+                                          "personident": "string",
+                                          "reservert": false,
+                                          "spraak": "nb"
+                                        }
+                                      }
+                                    }"""
                         )
                 )
         )
         stubFor(
-            get(urlPathEqualTo("/api/v1/person/institusjonsopphold"))
+            get(urlPathEqualTo("/api/v1/personer/kontaktinformasjon"))
                 .withHeader("Accept", equalTo("application/json"))
-                .withHeader("Nav-Personident", equalTo("ikkeTilgang"))
+                .withHeader("Nav-Personidenter", equalTo("erReservert"))
+                .withHeader("Nav-Call-Id", equalTo("id"))
+                .willReturn(
+                    aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(
+                            """{
+                                      "feil": {},
+                                      "kontaktinfo": {
+                                        "erReservert": {
+                                          "epostadresse": "string",
+                                          "kanVarsles": true,
+                                          "mobiltelefonnummer": "string",
+                                          "personident": "string",
+                                          "reservert": true,
+                                          "spraak": "nb"
+                                        }
+                                      }
+                                    }"""
+                        )
+                )
+        )
+        stubFor(
+            get(urlPathEqualTo("/api/v1/personer/kontaktinformasjon"))
+                .withHeader("Accept", equalTo("application/json"))
+                .withHeader("Nav-Personidenter", equalTo("kanIkkeVarsles"))
+                .withHeader("Nav-Call-Id", equalTo("id"))
+                .willReturn(
+                    aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(
+                            """{
+                                      "feil": {},
+                                      "kontaktinfo": {
+                                        "kanIkkeVarsles": {
+                                          "epostadresse": "string",
+                                          "kanVarsles": false,
+                                          "mobiltelefonnummer": "string",
+                                          "personident": "string",
+                                          "reservert": false,
+                                          "spraak": "nb"
+                                        }
+                                      }
+                                    }"""
+                        )
+                )
+        )
+        stubFor(
+            get(urlPathEqualTo("/api/v1/personer/kontaktinformasjon"))
+                .withHeader("Accept", equalTo("application/json"))
+                .withHeader("Nav-Personidenter", equalTo("erReservertOgKanIkkeVarsles"))
+                .withHeader("Nav-Call-Id", equalTo("id"))
+                .willReturn(
+                    aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(
+                            """{
+                                      "feil": {},
+                                      "kontaktinfo": {
+                                        "erReservertOgKanIkkeVarsles": {
+                                          "epostadresse": "string",
+                                          "kanVarsles": false,
+                                          "mobiltelefonnummer": "string",
+                                          "personident": "string",
+                                          "reservert": true,
+                                          "spraak": "nb"
+                                        }
+                                      }
+                                    }"""
+                        )
+                )
+        )
+        stubFor(
+            get(urlPathEqualTo("/api/v1/personer/kontaktinformasjon"))
+                .withHeader("Accept", equalTo("application/json"))
+                .withHeader("Nav-Personidenter", equalTo("feilet"))
+                .withHeader("Nav-Call-Id", equalTo("id"))
+                .willReturn(
+                    aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(
+                            """{
+                                      "feil": {
+                                        "feilet": {
+                                            "melding": "FEIL"
+                                        }
+                                      },
+                                      "kontaktinfo": {}
+                                    }"""
+                        )
+                )
+        )
+        stubFor(
+            get(urlPathEqualTo("/api/v1/personer/kontaktinformasjon"))
+                .withHeader("Accept", equalTo("application/json"))
+                .withHeader("Nav-Personidenter", equalTo("ikkeTilgang"))
                 .withHeader("Nav-Call-Id", equalTo("id"))
                 .willReturn(
                     aResponse()

@@ -1,7 +1,10 @@
 package no.nav.helse.sparkel.dkif
 
 import net.logstash.logback.argument.StructuredArguments.keyValue
-import no.nav.helse.rapids_rivers.*
+import no.nav.helse.rapids_rivers.JsonMessage
+import no.nav.helse.rapids_rivers.MessageProblems
+import no.nav.helse.rapids_rivers.RapidsConnection
+import no.nav.helse.rapids_rivers.River
 import org.slf4j.LoggerFactory
 
 internal class Dkifløser(
@@ -37,7 +40,8 @@ internal class Dkifløser(
             packet["fødselsnummer"].asText()
         ).let { løsning ->
             packet["@løsning"] = mapOf(
-                behov to (løsning?.map { Institusjonsoppholdperiode(it) } ?: emptyList())
+                behov to mapOf("erDigital" to (løsning?.takeUnless { it.isMissingNode }?.let { DigitalKontaktinformasjon(it).erDigital }
+                    ?: false))
             )
             context.send(packet.toJson().also { json ->
                 sikkerlogg.info(

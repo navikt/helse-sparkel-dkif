@@ -16,10 +16,10 @@ internal class DkifService(private val dkifClient: DkifClient) {
         fødselsnummer: String
     ): JsonNode? = withMDC("id" to behovId, "vedtaksperiodeId" to vedtaksperiodeId) {
         try {
-            val kontaktinformasjon = dkifClient.hentKontaktinformasjon(
+            val kontaktinformasjon = dkifClient.hentDigitalKontaktinformasjon(
                 fødselsnummer = fødselsnummer,
                 behovId = behovId
-            )
+            ).path("kontaktinfo").path(fødselsnummer)
             log.info(
                 "løser behov: {} for {}",
                 keyValue("id", behovId),

@@ -21,7 +21,7 @@ internal fun createApp(env: Map<String, String>): RapidsConnection {
     val dkifService = DkifService(dkifClient)
 
     return RapidApplication.create(env).apply {
-//        Institusjonsoppholdløser(this, institusjonsoppholdService)
+        Dkifløser(this, dkifService)
     }
 }
 

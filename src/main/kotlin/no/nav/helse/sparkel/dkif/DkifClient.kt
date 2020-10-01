@@ -15,7 +15,7 @@ internal class DkifClient(
         private val objectMapper = ObjectMapper()
     }
 
-    internal fun hentKontaktinformasjon(
+    internal fun hentDigitalKontaktinformasjon(
         fødselsnummer: String,
         behovId: String
     ): JsonNode {
@@ -29,7 +29,7 @@ internal class DkifClient(
             setRequestProperty("Accept", "application/json")
             setRequestProperty("Nav-Call-Id", behovId)
             setRequestProperty("Nav-Consumer-Id", "srvsparkeldkif")
-            setRequestProperty("Nav-Personidenter ", fødselsnummer)
+            setRequestProperty("Nav-Personidenter", fødselsnummer)
 
             val stream: InputStream? = if (responseCode < 300) this.inputStream else this.errorStream
             responseCode to stream?.bufferedReader()?.readText()
